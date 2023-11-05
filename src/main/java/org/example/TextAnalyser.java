@@ -13,12 +13,12 @@ public class TextAnalyser {
     private static AtomicReference<String> maxTextA = new AtomicReference<>("");
     private static AtomicReference<String> maxTextB = new AtomicReference<>("");
     private static AtomicReference<String> maxTextC = new AtomicReference<>("");
+    private static String letters = "abc";
+    private static int length = 100_000;
+    private static int numbtexts = 10_000;
 
     public static void main(String[] args) {
 
-        String letters = "abc";
-        int length = 100_000;
-        int numbtexts = 10_000;
 
         // Создаем поток для генерации текстов
         Thread textGeneratorThread = new Thread(() -> {
@@ -44,56 +44,17 @@ public class TextAnalyser {
 
         // Создаем поток для анализа символа 'a'
         Thread threadA = new Thread(() -> {
-            int maxCountA = 0;
-
-            for (int i = 0; i < numbtexts; i++) {
-                try {
-                    String text = queueA.take();
-                    int countA = text.length() - text.replace("a", "").length();
-                    if (countA > maxCountA) {
-                        maxCountA = countA;
-                        maxTextA.set(text);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+            countChar(queueA, "a", maxTextA);
         });
 
         // Создаем поток для анализа символа 'b'
         Thread threadB = new Thread(() -> {
-            int maxCountB = 0;
-
-            for (int i = 0; i < numbtexts; i++) {
-                try {
-                    String text = queueB.take();
-                    int countB = text.length() - text.replace("b", "").length();
-                    if (countB > maxCountB) {
-                        maxCountB = countB;
-                        maxTextB.set(text);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+            countChar(queueB, "b", maxTextB);
         });
 
         // Создаем поток для анализа символа 'c'
         Thread threadC = new Thread(() -> {
-            int maxCountC = 0;
-
-            for (int i = 0; i < numbtexts; i++) {
-                try {
-                    String text = queueC.take();
-                    int countC = text.length() - text.replace("c", "").length();
-                    if (countC > maxCountC) {
-                        maxCountC = countC;
-                        maxTextC.set(text);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+            countChar(queueC, "c", maxTextC);
         });
 
         // Запускаем все потоки
@@ -114,5 +75,21 @@ public class TextAnalyser {
         System.out.println("Текст, в котором содержится максимальное количество символов 'a' : " + maxTextA);
         System.out.println("Текст, в котором содержится максимальное количество символов 'b' : " + maxTextB);
         System.out.println("Текст, в котором содержится максимальное количество символов 'c' : " + maxTextC);
+    }
+
+    public static void countChar(ArrayBlockingQueue<String> queue, String ch, AtomicReference<String> maxText) {
+        int maxCount = 0;
+        for (int i = 0; i < numbtexts; i++) {
+            try {
+                String text = queue.take();
+                int count = text.length() - text.replace(ch, "").length();
+                if (count > maxCount) {
+                    maxCount = count;
+                    maxText.set(text);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
